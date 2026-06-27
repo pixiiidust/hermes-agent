@@ -67,6 +67,10 @@ function pathToFileUrl(path: string) {
   return `file://${encoded.startsWith('/') ? encoded : `/${encoded}`}`
 }
 
+function htmlDataUrl(text: string) {
+  return `data:text/html;charset=utf-8,${encodeURIComponent(text)}`
+}
+
 export function localPreviewTarget(rawTarget: string, cwd?: string | null): PreviewTarget | null {
   const raw = rawTarget.trim().replace(/^`|`$/g, '')
 
@@ -122,7 +126,11 @@ async function enrichPreviewTarget(target: PreviewTarget | null): Promise<Previe
       byteSize: result.byteSize,
       language: result.language || target.language,
       large: (result.byteSize ?? 0) > 512 * 1024,
-      mimeType: result.mimeType
+      mimeType: result.mimeType,
+      url:
+        target.previewKind === 'html' && !result.binary && !result.truncated
+          ? htmlDataUrl(result.text)
+          : target.url
     }
   } catch {
     return target
